@@ -592,9 +592,16 @@
         let isSpinning = false;
         let timerInterval = null;
 
-        function startOneMinuteTimer() {
-            let timeLeft = 60; // 60 секунд
+        // Функция запуска таймера с поддержкой сохранения при перезагрузке
+        function startOneMinuteTimer(customTime = 60) {
+            let timeLeft = customTime;
             spinBtn.disabled = true;
+
+            // Если это новый запуск, сохраняем точное время окончания в память телефона/браузера
+            if (customTime === 60) {
+                const endTime = Date.now() + 60 * 1000;
+                localStorage.setItem('wheelTimerEnd', endTime);
+            }
 
             function updateTimerDisplay() {
                 let minutes = Math.floor(timeLeft / 60);
@@ -606,17 +613,31 @@
 
             updateTimerDisplay();
 
+            if (timerInterval) clearInterval(timerInterval);
+
             timerInterval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft > 0) {
                     updateTimerDisplay();
                 } else {
                     clearInterval(timerInterval);
+                    localStorage.removeItem('wheelTimerEnd'); // Очищаем таймер из памяти
                     spinBtn.disabled = false;
                     spinBtn.textContent = "Крутить колесо!";
                     resultDiv.textContent = "✨ Таймер завершен! Можете крутить колесо снова!";
                 }
             }, 1000);
+        }
+
+        // Проверяем при загрузке страницы: шел ли таймер до этого
+        const savedEndTime = localStorage.getItem('wheelTimerEnd');
+        if (savedEndTime) {
+            const timeLeft = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
+            if (timeLeft > 0) {
+                startOneMinuteTimer(timeLeft); // Продолжаем отсчет с оставшегося времени
+            } else {
+                localStorage.removeItem('wheelTimerEnd');
+            }
         }
 
         function spinWheel() {
@@ -692,7 +713,7 @@
                 } else {
                     const assignedCode = addPrizeToHistory(wonPrize);
                     resultDiv.innerHTML = `🎉 Приз: ${wonPrize}! <br><span style="font-size: 16px; color: #fff3cd;">Код купона: <b style="color: #e74c3c;">${assignedCode}</b></span>`;
-                    startOneMinuteTimer();
+                    startOneMinuteTimer(60); // Запускаем стандартный таймер на 60 секунд
                 }
 
             }, 15000);
