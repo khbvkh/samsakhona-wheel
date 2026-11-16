@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Изобилия — Самсахона</title>
+    <!-- Библиотека фейерверка -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2c1a0e 0%, #1a0f08 100%);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            gap: 25px;
+        }
+        /* ЛЕВАЯ ПАНЕЛЬ МЕНЮ И ПРИЗОВ */
+        .menu-sidebar {
+            width: 380px;
+            height: 660px;
+            background: rgba(26, 15, 8, 0.9);
+            border: 3px solid #d4ac0d;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(212, 172, 13, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+        .menu-sidebar h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #f1c40f;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            border-bottom: 2px solid rgba(212, 172, 13, 0.4);
+            padding-bottom: 8px;
+        }
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+        .menu-item {
+            background: rgba(39, 174, 96, 0.12);
+            border-left: 4px solid #27ae60;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .menu-item span:first-child {
+            font-weight: 600;
+            color: #fff3cd;
+        }
+        .price-tag {
+            color: #f1c40f;
+            font-weight: bold;
+            font-size: 12px;
+            background: rgba(241, 196, 15, 0.15);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(241, 196, 15, 0.3);
+        }
+
+        /* ПРАВАЯ ПАНЕЛЬ ИСТОРИИ И КОДОВ */
+        .history-sidebar {
+            width: 290px;
+            height: 660px;
+            background: rgba(26, 15, 8, 0.9);
+            border: 3px solid #d4ac0d;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(212, 172, 13, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+        .history-sidebar h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #f1c40f;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            border-bottom: 2px solid rgba(212, 172, 13, 0.4);
+            padding-bottom: 8px;
+        }
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+        .history-item {
+            background: rgba(212, 172, 13, 0.15);
+            border-left: 4px solid #f1c40f;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .history-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item-top span:first-child {
+            font-weight: 600;
+            color: #fff3cd;
+        }
+        .history-item-top span:last-child {
+            color: #bdc3c7;
+            font-size: 10px;
+        }
+        .promo-code {
+            font-family: monospace;
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px dashed #e74c3c;
+            display: inline-block;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Кастомный скроллбар для панелей */
+        .menu-list::-webkit-scrollbar, .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .menu-list::-webkit-scrollbar-thumb, .history-list::-webkit-scrollbar-thumb {
+            background: #d4ac0d;
+            border-radius: 3px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin: 0 0 15px 0;
+            font-size: 26px;
+            color: #f1c40f;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .wheel-container {
+            position: relative;
+            width: 660px;
+            height: 660px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .wheel-border {
+            width: 630px;
+            height: 630px;
+            border-radius: 50%;
+            background: #d4ac0d;
+            box-shadow: 0 0 40px rgba(212, 172, 13, 0.5), inset 0 0 20px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        canvas {
+            border-radius: 50%;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+        }
+        /* Внешняя вращающаяся стрелка строго сверху */
+        .external-spinner {
+            position: absolute;
+            width: 650px;
+            height: 650px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            z-index: 30;
+            transform-origin: center center;
+            transition: transform 15s cubic-bezier(0.1, 0.8, 0.2, 1);
+            pointer-events: none;
+        }
+        .external-spinner::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: calc(50% - 16px);
+            width: 0;
+            height: 0;
+            border-left: 16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top: 38px solid #e74c3c;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5));
+        }
+        .wheel-center-btn {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #fff3cd 0%, #d4ac0d 100%);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11px;
+            text-align: center;
+            line-height: 1.2;
+            color: #2f3640;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            pointer-events: none;
+            padding: 5px;
+        }
+        .spin-btn {
+            margin-top: 25px;
+            padding: 14px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+            transition: all 0.2s ease;
+        }
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.6);
+        }
+        .spin-btn:disabled {
+            background: #718093;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #f1c40f;
+            min-height: 35px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- СЛЕВА: Уникальные призы и фонд -->
+    <div class="menu-sidebar">
+        <h3>🎁 Призовой фонд</h3>
+        <ul id="menuList" class="menu-list">
+            <!-- Заполняется динамически -->
+        </ul>
+    </div>
+
+    <!-- ПО ЦЕНТРУ: Колесо Фортуны -->
+    <div class="main-content">
+        <h1>🌟 Колесо Изобилия — Самсахона</h1>
+
+        <div class="wheel-container">
+            <div id="externalPointer" class="external-spinner"></div>
+            <div class="wheel-border">
+                <div class="wheel-center-btn">
+                    <span style="color: #c0392b; font-size: 12px;">iPhone 18 Pro</span>
+                    <span style="font-size: 10px; margin-top: 2px;">Главный приз</span>
+                </div>
+                <canvas id="wheel" width="600" height="600"></canvas>
+            </div>
+        </div>
+        
+        <button id="spinBtn" class="spin-btn" onclick="spinWheel()">Крутить колесо!</button>
+        <div id="result"></div>
+    </div>
+
+    <!-- СПРАВА: История выигрышей и купонов (до 30 штук) -->
+    <div class="history-sidebar">
+        <h3>🏆 Выигрыши и Коды</h3>
+        <ul id="historyList" class="history-list">
+            <li style="color: #7f8c8d; text-align: center; margin-top: 30px; font-size: 13px;">Пока нет выигрышей</li>
+        </ul>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const externalPointer = document.getElementById('externalPointer');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultDiv = document.getElementById('result');
+        const historyList = document.getElementById('historyList');
+        const menuList = document.getElementById('menuList');
+
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playUpgradeTone() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.04);
+
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+
+        function playRichWinSound() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const chords = [
+                { notes: [523.25, 659.25, 783.99], time: 0.0, dur: 0.2 }, 
+                { notes: [587.33, 698.46, 880.00], time: 0.2, dur: 0.2 }, 
+                { notes: [659.25, 830.61, 987.77], time: 0.4, dur: 0.2 }, 
+                { notes: [783.99, 1046.50, 1318.51], time: 0.6, dur: 0.8 } 
+            ];
+            chords.forEach(chord => {
+                chord.notes.forEach(freq => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + chord.time);
+                    gain.gain.setValueAtTime(0.25, now + chord.time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + chord.time + chord.dur);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + chord.time);
+                    osc.stop(now + chord.time + chord.dur);
+                });
+            });
+        }
+
+        // Призовой фонд
+        const prizes = [
+            { name: "Скидка 5%", weight: 20, color: "#27ae60", tag: "Бонус" },
+            { name: "Скидка 10%", weight: 14, color: "#2980b9", tag: "Бонус" },
+            { name: "Скидка 15%", weight: 8, color: "#1b4f72", tag: "Супер-бонус" },
+            { name: "Соус на выбор", weight: 15, color: "#d35400", tag: "Добавка" },
+            { name: "Вода / Напиток", weight: 15, color: "#16a085", tag: "Напиток" },
+            { name: "Мягкий сувенир", weight: 15, color: "#27ae60", tag: "Сувенир" },
+            { name: "Блюдо на выбор", weight: 6, color: "#c0392b", tag: "Порция" },
+            { name: "Фирменный салат", weight: 10, color: "#229954", tag: "Блюдо" },
+            { name: "Десерт от шефа", weight: 10, color: "#e67e22", tag: "Сладость" },
+            { name: "Еще раз прокрутку", weight: 12, color: "#d35400", tag: "Шанс" },
+            { name: "Жвачка / Мята", weight: 15, color: "#f39c12", tag: "Бонус" },
+            { name: "Фирменный термос", weight: 3.4, color: "#d68910", tag: "Подарок" },
+            { name: "Павербанк", weight: 3, color: "#2c3e50", tag: "Гаджет" },
+            { name: "Беспр. наушники", weight: 2.55, color: "#8e44ad", tag: "Гаджет" },
+            { name: "iPhone 18 Pro", weight: 0, visualWeightRef: 2.55, color: "#f1c40f", tag: "Главный приз" } // Защищенный статус[cite: 1]
+        ];
+
+        const numSegments = prizes.length;
+        let winHistory = []; // Массив истории выигрышей (макс 30)
+
+        function getMappedPrizes() {
+            const totalVisualWeight = prizes.reduce((sum, p) => sum + (p.visualWeightRef !== undefined ? p.visualWeightRef : p.weight), 0);
+            let accumulatedAngle = 0;
+            return prizes.map((prize, index) => {
+                const effectiveVisualWeight = prize.visualWeightRef !== undefined ? prize.visualWeightRef : prize.weight;
+                const sweepAngle = (effectiveVisualWeight / totalVisualWeight) * 360;
+                const startAngle = accumulatedAngle;
+                const endAngle = accumulatedAngle + sweepAngle;
+                accumulatedAngle += sweepAngle;
+                return {
+                    ...prize,
+                    index,
+                    startAngle,
+                    endAngle,
+                    sweepAngle
+                };
+            });
+        }
+
+        let currentPointerAngle = 0;
+
+        function drawWheel() {
+            const radius = canvas.width / 2;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const mappedPrizes = getMappedPrizes();
+
+            mappedPrizes.forEach((prize) => {
+                const startRad = (prize.startAngle - 90) * Math.PI / 180;
+                const endRad = (prize.endAngle - 90) * Math.PI / 180;
+                
+                ctx.save();
+                const gradient = ctx.createLinearGradient(0, 0, radius * 2, radius * 2);
+                gradient.addColorStop(0, prize.color);
+                gradient.addColorStop(1, '#1a0f08');
+
+                ctx.beginPath();
+                ctx.fillStyle = gradient;
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius, startRad, endRad);
+                ctx.lineTo(radius, radius);
+                ctx.fill();
+                
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                const midAngle = prize.startAngle + prize.sweepAngle / 2;
+                ctx.translate(radius, radius);
+                ctx.rotate((midAngle - 90) * Math.PI / 180);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                const fontSize = prize.sweepAngle < 12 ? "10px" : "12px";
+                ctx.font = `bold ${fontSize} 'Segoe UI', sans-serif`;
+                ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                ctx.fillText(prize.name, radius - 22, 4);
+                ctx.restore();
+            });
+        }
+
+        function renderMenu() {
+            menuList.innerHTML = '';
+            prizes.forEach((p) => {
+                const li = document.createElement('li');
+                li.className = 'menu-item';
+                li.innerHTML = `<span>🎁 ${p.name}</span> <span class="price-tag">${p.tag}</span>`;
+                menuList.appendChild(li);
+            });
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            
+            if (winHistory.length === 0) {
+                historyList.innerHTML = `<li style="color: #7f8c8d; text-align: center; margin-top: 30px; font-size: 13px;">Пока нет выигрышей</li>`;
+                return;
+            }
+
+            winHistory.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.innerHTML = `
+                    <div class="history-item-top">
+                        <span>🎁 ${item.name}</span> 
+                        <span>${item.time}</span>
+                    </div>
+                    <div class="promo-code">КУПОН: ${item.code}</div>
+                `;
+                historyList.appendChild(li);
+            });
+        }
+
+        function generatePromoCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'SAMSA-';
+            for (let i = 0; i < 4; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function addPrizeToHistory(prizeName) {
+            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const promoCode = generatePromoCode();
+            
+            winHistory.unshift({ name: prizeName, time: timeString, code: promoCode });
+
+            if (winHistory.length > 30) {
+                winHistory.pop();
+            }
+
+            renderHistory();
+            return promoCode;
+        }
+
+        function triggerTopCenterFireworks() {
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 12,
+                    angle: 90,
+                    spread: 100,
+                    origin: { x: 0.5, y: 0 }
+                });
+
+                if (Date.now() < animationEnd) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        let isSpinning = false;
+        let timerInterval = null;
+
+        // Функция запуска таймера на 1 минуту для обычных призов
+        function startOneMinuteTimer() {
+            let timeLeft = 60; // 60 секунд
+            spinBtn.disabled = true;
+
+            function updateTimerDisplay() {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                let formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                spinBtn.textContent = `Повтор через ${formattedTime}`;
+            }
+
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    spinBtn.disabled = false;
+                    spinBtn.textContent = "Крутить колесо!";
+                    resultDiv.textContent = "✨ Таймер завершен! Можете крутить колесо снова!";
+                }
+            }, 1000);
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            initAudio();
+            isSpinning = true;
+            spinBtn.disabled = true;
+            resultDiv.textContent = "Крутим...";
+
+            function getRandomWeightedIndex() {
+                const available = prizes.map((p, idx) => ({ ...p, originalIndex: idx })).filter(p => p.weight > 0);
+                const totalWeight = available.reduce((sum, p) => sum + p.weight, 0);
+                let randomNum = Math.random() * totalWeight;
+                let currentSum = 0;
+
+                for (let i = 0; i < available.length; i++) {
+                    currentSum += available[i].weight;
+                    if (randomNum <= currentSum) {
+                        return available[i].originalIndex;
+                    }
+                }
+                return available[0].originalIndex;
+            }
+
+            const winningIndex = getRandomWeightedIndex();
+            const mappedPrizes = getMappedPrizes();
+            const winningPrize = mappedPrizes[winningIndex];
+
+            const padding = winningPrize.sweepAngle * 0.25;
+            const randomOffset = padding + Math.random() * Math.max(0, winningPrize.sweepAngle - padding * 2);
+            const targetSliceAngle = winningPrize.startAngle + randomOffset;
+
+            const extraSpins = 360 * 15; 
+            const totalPointerAngle = currentPointerAngle + extraSpins + ((360 - (currentPointerAngle % 360) + targetSliceAngle) % 360);
+
+            let lastSegment = -1;
+            const startTime = performance.now();
+            const duration = 15000; 
+
+            function animateClicks() {
+                const elapsed = performance.now() - startTime;
+                if (elapsed <= duration) {
+                    const currentRot = currentPointerAngle + (totalPointerAngle - currentPointerAngle) * (elapsed / duration);
+                    const normalizedRot = (currentRot % 360 + 360) % 360;
+                    
+                    const currentSegObj = mappedPrizes.find(p => normalizedRot >= p.startAngle && normalizedRot < p.endAngle);
+                    const currentSegment = currentSegObj ? currentSegObj.index : -1;
+                    
+                    if (currentSegment !== lastSegment && currentSegment !== -1) {
+                        playUpgradeTone();
+                        lastSegment = currentSegment;
+                    }
+                    requestAnimationFrame(animateClicks);
+                }
+            }
+            requestAnimationFrame(animateClicks);
+
+            currentPointerAngle = totalPointerAngle;
+            externalPointer.style.transform = `translate(-50%, -50%) rotate(${currentPointerAngle}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                
+                const wonPrize = prizes[winningIndex].name;
+                
+                playRichWinSound();
+                triggerTopCenterFireworks();
+
+                // Проверяем: если выпала «Еще раз прокрутку», таймер НЕ включается, кнопка сразу активна
+                if (wonPrize === "Еще раз прокрутку") {
+                    spinBtn.disabled = false;
+                    spinBtn.textContent = "Крутить колесо!";
+                    resultDiv.innerHTML = `🔄 Вы выиграли повторную прокрутку! Крутите снова без ожидания!`;
+                } else {
+                    // Для всех остальных ячеек включается таймер обратного отсчета на 1 минуту
+                    const assignedCode = addPrizeToHistory(wonPrize);
+                    resultDiv.innerHTML = `🎉 Приз: ${wonPrize}! <br><span style="font-size: 16px; color: #fff3cd;">Код купона: <b style="color: #e74c3c;">${assignedCode}</b></span>`;
+                    startOneMinuteTimer();
+                }
+
+            }, 15000);
+        }
+
+        drawWheel();
+        renderMenu();
+        renderHistory();
+    </script>
+</body>
+</html>
